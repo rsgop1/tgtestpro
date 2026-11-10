@@ -1,0 +1,1043 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Testbook+ Admin API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: learner-tests
+  - name: admin-auth
+  - name: admin-dashboard
+  - name: admin-payments
+  - name: admin-tests
+  - name: admin-settings
+  - name: admin-support
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /learner/web-session:
+    get:
+      operationId: learnerGetWebSession
+      tags: [learner-tests]
+      summary: Validate a Telegram premium web-session token
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Valid learner session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerWebSession"
+        "401":
+          description: Invalid or expired token
+
+  /learner/test:
+    get:
+      operationId: learnerGetTestSeries
+      tags: [learner-tests]
+      summary: Get a premium test for the web runner
+      parameters:
+        - in: query
+          name: testId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Test details and questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerTest"
+        "401":
+          description: Premium access required
+        "404":
+          description: Test not found
+
+  /learner/attempts:
+    post:
+      operationId: learnerSubmitAttempt
+      tags: [learner-tests]
+      summary: Submit a completed web mock-test attempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LearnerAttemptInput"
+      responses:
+        "201":
+          description: Attempt saved and scored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerResult"
+        "401":
+          description: Premium access required
+
+  /learner/reports:
+    post:
+      operationId: learnerCreateReport
+      tags: [learner-tests]
+      summary: Report a web-test question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LearnerReportInput"
+      responses:
+        "201":
+          description: Report submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "401":
+          description: Premium access required
+
+  /learner/ai-info:
+    post:
+      operationId: learnerGetAiInfo
+      tags: [learner-tests]
+      summary: Get AI tutor guidance for a web-test question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LearnerAiInfoInput"
+      responses:
+        "200":
+          description: AI tutor response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerAiInfo"
+        "401":
+          description: Premium access required
+        "503":
+          description: AI tutor unavailable
+
+  /admin/auth/login:
+    post:
+      operationId: adminLogin
+      tags: [admin-auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResult"
+        "401":
+          description: Invalid password
+
+  /admin/auth/me:
+    get:
+      operationId: adminGetMe
+      tags: [admin-auth]
+      summary: Check auth status
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResult"
+        "401":
+          description: Not authenticated
+
+  /admin/auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin-auth]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin-dashboard]
+      summary: Get dashboard stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /admin/payments:
+    get:
+      operationId: adminListPayments
+      tags: [admin-payments]
+      summary: List payments
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+
+  /admin/support-tickets:
+    get:
+      operationId: adminListSupportTickets
+      tags: [admin-support]
+      summary: List support tickets
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, default: all }
+        - in: query
+          name: category
+          schema: { type: string, default: all }
+        - in: query
+          name: priority
+          schema: { type: string, default: all }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Support ticket list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportTicket"
+
+  /admin/support-tickets/{id}:
+    patch:
+      operationId: adminUpdateSupportTicket
+      tags: [admin-support]
+      summary: Update support ticket
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketUpdate"
+      responses:
+        "200":
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/payments/{paymentId}/approve:
+    post:
+      operationId: adminApprovePayment
+      tags: [admin-payments]
+      summary: Approve a payment
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/payments/{paymentId}/reject:
+    post:
+      operationId: adminRejectPayment
+      tags: [admin-payments]
+      summary: Reject a payment
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/payment-image/{fileId}:
+    get:
+      operationId: adminGetPaymentImage
+      tags: [admin-payments]
+      summary: Get payment screenshot
+      parameters:
+        - in: path
+          name: fileId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Image binary
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  /admin/tests:
+    get:
+      operationId: adminListTests
+      tags: [admin-tests]
+      summary: List all test series
+      responses:
+        "200":
+          description: Test list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestSeries"
+    post:
+      operationId: adminImportTest
+      tags: [admin-tests]
+      summary: Import a test series
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestSeriesInput"
+      responses:
+        "201":
+          description: Imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestSeries"
+
+  /admin/tests/{testId}:
+    delete:
+      operationId: adminDeleteTest
+      tags: [admin-tests]
+      summary: Delete a test series
+      parameters:
+        - in: path
+          name: testId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/tests/{testId}/toggle:
+    post:
+      operationId: adminToggleTest
+      tags: [admin-tests]
+      summary: Toggle test active status
+      parameters:
+        - in: path
+          name: testId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/flash-sales:
+    get:
+      operationId: adminListFlashSales
+      tags: [admin-tests]
+      summary: List flash sales
+      responses:
+        "200":
+          description: Flash sale list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FlashSale"
+    post:
+      operationId: adminCreateFlashSale
+      tags: [admin-tests]
+      summary: Create a flash sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashSaleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashSale"
+
+  /admin/flash-sales/{id}:
+    delete:
+      operationId: adminDeleteFlashSale
+      tags: [admin-tests]
+      summary: Delete a flash sale
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/settings:
+    get:
+      operationId: adminGetSettings
+      tags: [admin-settings]
+      summary: Get all config settings
+      responses:
+        "200":
+          description: Settings map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSettings"
+    post:
+      operationId: adminUpdateSettings
+      tags: [admin-settings]
+      summary: Update config settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSettings"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /admin/broadcast:
+    post:
+      operationId: adminBroadcast
+      tags: [admin-settings]
+      summary: Broadcast message to users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastInput"
+      responses:
+        "200":
+          description: Broadcast result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BroadcastResult"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin-dashboard]
+      summary: List recent users
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+  /admin/users/{userId}/premium:
+    post:
+      operationId: adminGrantUserPremium
+      tags: [admin-dashboard]
+      summary: Grant or extend premium access for a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPremiumGrantInput"
+      responses:
+        "200":
+          description: Premium updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPremiumResult"
+    delete:
+      operationId: adminRevokeUserPremium
+      tags: [admin-dashboard]
+      summary: Revoke premium access from a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Premium revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+  /admin/users/{userId}/message:
+    post:
+      operationId: adminMessageUser
+      tags: [admin-dashboard]
+      summary: Send a direct Telegram message to a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserMessageInput"
+      responses:
+        "200":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+  /admin/users/{userId}/reset-usage:
+    post:
+      operationId: adminResetUserUsage
+      tags: [admin-dashboard]
+      summary: Reset daily AI usage counters
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usage reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    LearnerWebSession:
+      type: object
+      required: [userId, fullName, username, tier, premiumExpiry]
+      properties:
+        userId: { type: integer }
+        fullName: { type: string }
+        username: { type: ["string", "null"] }
+        tier: { type: string }
+        premiumExpiry: { type: ["string", "null"], format: date-time }
+
+    LearnerTest:
+      type: object
+      required: [testId, testName, mainCategory, subCategory, positiveMarking, negativeMarking, timerSeconds, webTimerSeconds, questionCount, sections, questions]
+      properties:
+        testId: { type: string }
+        testName: { type: string }
+        mainCategory: { type: string }
+        subCategory: { type: string }
+        positiveMarking: { type: number }
+        negativeMarking: { type: number }
+        timerSeconds: { type: integer }
+        webTimerSeconds: { type: integer }
+        questionCount: { type: integer }
+        sections:
+          type: array
+          items: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearnerQuestion"
+
+    LearnerQuestion:
+      type: object
+      required: [id, question, options, section]
+      properties:
+        id: { type: string }
+        question: { type: string }
+        options:
+          type: array
+          items: { type: string }
+        section: { type: string }
+        imageUrl: { type: ["string", "null"] }
+
+    LearnerAttemptInput:
+      type: object
+      required: [token, testId, answers, markedForReview, timeSpentSeconds]
+      properties:
+        token: { type: string }
+        testId: { type: string }
+        answers:
+          type: object
+          additionalProperties:
+            type: integer
+        markedForReview:
+          type: array
+          items: { type: string }
+        timeSpentSeconds: { type: integer, minimum: 0 }
+
+    LearnerResult:
+      type: object
+      required: [attemptId, testName, totalQuestions, attempted, correct, incorrect, skipped, score, maxScore, accuracy, rankPercentile, timeSpentSeconds, markedForReview, telegramSynced, sections, review, strengths, focusAreas, recommendation]
+      properties:
+        attemptId: { type: integer }
+        testName: { type: string }
+        totalQuestions: { type: integer }
+        attempted: { type: integer }
+        correct: { type: integer }
+        incorrect: { type: integer }
+        skipped: { type: integer }
+        score: { type: number }
+        maxScore: { type: number }
+        accuracy: { type: number }
+        rankPercentile: { type: number }
+        timeSpentSeconds: { type: integer }
+        markedForReview:
+          type: array
+          items: { type: string }
+        telegramSynced: { type: boolean }
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearnerSectionResult"
+        review:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearnerQuestionReview"
+        strengths:
+          type: array
+          items: { type: string }
+        focusAreas:
+          type: array
+          items: { type: string }
+        recommendation:
+          type: string
+
+    LearnerSectionResult:
+      type: object
+      required: [name, attempted, correct, incorrect, score]
+      properties:
+        name: { type: string }
+        attempted: { type: integer }
+        correct: { type: integer }
+        incorrect: { type: integer }
+        score: { type: number }
+        percentage: { type: number }
+        skipped: { type: integer }
+
+    LearnerQuestionReview:
+      type: object
+      required: [id, question, options, section, selectedOption, correctOptionIndex, explanation, status]
+      properties:
+        id: { type: string }
+        question: { type: string }
+        options:
+          type: array
+          items: { type: string }
+        section: { type: string }
+        imageUrl: { type: ["string", "null"] }
+        selectedOption: { type: ["integer", "null"] }
+        correctOptionIndex: { type: integer }
+        explanation: { type: string }
+        status: { type: string, enum: [correct, incorrect, skipped] }
+
+    LearnerReportInput:
+      type: object
+      required: [token, testId, questionId, reportText]
+      properties:
+        token: { type: string }
+        testId: { type: string }
+        questionId: { type: string }
+        reportText: { type: string, minLength: 3, maxLength: 1000 }
+
+    LearnerAiInfoInput:
+      type: object
+      required: [token, testId, questionId]
+      properties:
+        token: { type: string }
+        testId: { type: string }
+        questionId: { type: string }
+
+    LearnerAiInfo:
+      type: object
+      required: [questionId, answer]
+      properties:
+        questionId: { type: string }
+        answer: { type: string }
+
+    SuccessResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    AdminLoginInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    AdminAuthResult:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated:
+          type: boolean
+
+    AdminPremiumGrantInput:
+      type: object
+      required: [days]
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          maximum: 3650
+
+    AdminPremiumResult:
+      type: object
+      required: [success, message, premiumExpiry]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        premiumExpiry:
+          type: string
+          format: date-time
+
+    AdminUserMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+
+    DashboardStats:
+      type: object
+      required: [totalUsers, premiumUsers, newUsersToday, totalTests, pendingPayments, upiEarnings, starsEarnings, totalTestAttempts]
+      properties:
+        totalUsers:
+          type: integer
+        premiumUsers:
+          type: integer
+        newUsersToday:
+          type: integer
+        totalTests:
+          type: integer
+        pendingPayments:
+          type: integer
+        upiEarnings:
+          type: number
+        starsEarnings:
+          type: number
+        totalTestAttempts:
+          type: integer
+
+    Payment:
+      type: object
+      required: [id, paymentId, userId, method, amount, status, submittedAt]
+      properties:
+        id:
+          type: integer
+        paymentId:
+          type: string
+        userId:
+          type: integer
+        method:
+          type: string
+        amount:
+          type: integer
+        testId:
+          type: ["string", "null"]
+        screenshotFileId:
+          type: ["string", "null"]
+        status:
+          type: string
+        submittedAt:
+          type: string
+
+    TestSeries:
+      type: object
+      required: [id, testId, testName, mainCategory, subCategory, subject, subSubject, positiveMarking, negativeMarking, priceInr, priceInStars, isActive, createdAt, questionCount, timerSeconds, webTimerSeconds]
+      properties:
+        id:
+          type: integer
+        testId:
+          type: string
+        testName:
+          type: string
+        mainCategory:
+          type: string
+        subCategory:
+          type: string
+        subject:
+          type: string
+        subSubject:
+          type: string
+        positiveMarking:
+          type: number
+        negativeMarking:
+          type: number
+        priceInr:
+          type: integer
+        priceInStars:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        questionCount:
+          type: integer
+        timerSeconds:
+          type: integer
+        webTimerSeconds:
+          type: integer
+
+    TestSeriesInput:
+      type: object
+      required: [testId, testName, mainCategory, subCategory, subject, subSubject, questionsJson]
+      properties:
+        testId:
+          type: string
+        testName:
+          type: string
+        mainCategory:
+          type: string
+        subCategory:
+          type: string
+        subject:
+          type: string
+        subSubject:
+          type: string
+        positiveMarking:
+          type: number
+        negativeMarking:
+          type: number
+        priceInr:
+          type: integer
+        priceInStars:
+          type: integer
+        timerSeconds:
+          type: integer
+        webTimerSeconds:
+          type: integer
+        questionsJson:
+          type: string
+
+    FlashSale:
+      type: object
+      required: [id, testId, discountInr, discountStars, endsAt, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        testId:
+          type: string
+        discountInr:
+          type: integer
+        discountStars:
+          type: integer
+        endsAt:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    FlashSaleInput:
+      type: object
+      required: [testId, discountInr, discountStars, endsAt]
+      properties:
+        testId:
+          type: string
+        discountInr:
+          type: integer
+        discountStars:
+          type: integer
+        endsAt:
+          type: string
+
+    AdminSettings:
+      type: object
+      properties:
+        admin_upi_vpa:
+          type: string
+        force_sub_enabled:
+          type: string
+        force_sub_channel:
+          type: string
+
+    BroadcastInput:
+      type: object
+      required: [message, target]
+      properties:
+        message:
+          type: string
+        target:
+          type: string
+
+    BroadcastResult:
+      type: object
+      required: [sent, failed]
+      properties:
+        sent:
+          type: integer
+        failed:
+          type: integer
+
+    AdminUser:
+      type: object
+      required: [id, userId, fullName, tier, totalTestsTaken, joinedAt, premiumExpiry, targetExamMain, accuracyRate, referralCount, aiDoubtCount, aiDoubtDate, anonDoubtsUsed, anonDoubtDate]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        fullName:
+          type: string
+        username:
+          type: ["string", "null"]
+        tier:
+          type: string
+        premiumExpiry:
+          type: ["string", "null"]
+          format: date-time
+        targetExamMain:
+          type: ["string", "null"]
+        targetExamSub:
+          type: ["string", "null"]
+        accuracyRate:
+          type: number
+        totalTestsTaken:
+          type: integer
+        referralCount:
+          type: integer
+        aiDoubtCount:
+          type: integer
+        aiDoubtDate:
+          type: ["string", "null"]
+        anonDoubtsUsed:
+          type: integer
+        anonDoubtDate:
+          type: ["string", "null"]
+        joinedAt:
+          type: string
+    SupportTicket:
+      type: object
+      required: [id, userId, category, message, status, priority, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        category: { type: string }
+        message: { type: string }
+        status: { type: string }
+        priority: { type: string }
+        adminNote: { type: ["string", "null"] }
+        resolvedBy: { type: ["integer", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        fullName: { type: ["string", "null"] }
+        username: { type: ["string", "null"] }
+        tier: { type: ["string", "null"] }
+    SupportTicketUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        priority: { type: string }
+        adminNote: { type: ["string", "null"] }

@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidChat(data) {
+      return data.keys().hasAll(['text', 'role', 'createdAt'])
+        && data.keys().size() == 3
+        && data.text is string
+        && data.text.size() <= 10000
+        && (data.role == 'user' || data.role == 'model')
+        && data.createdAt == request.time;
+    }
+
+    function isValidCustomTest(data) {
+      return data.keys().hasAll(['topic', 'testId', 'shareToken', 'createdAt'])
+        && data.keys().size() == 4
+        && data.topic is string
+        && data.topic.size() <= 500
+        && data.testId is number
+        && data.shareToken is string
+        && data.shareToken.size() <= 200
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId} {
+      match /chats/{chatId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidChat(incoming());
+        allow update, delete: if false; // Chats are immutable
+      }
+
+      match /customTests/{testId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCustomTest(incoming());
+        allow update, delete: if false; // Custom tests are immutable
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+
+> workspace@0.0.0 dev
+> npm run build --workspace=artifacts/testbook-web && npm run dev --workspace=artifacts/api-server
+
+
+> @workspace/testbook-web@0.0.0 build
+> vite build --config vite.config.ts
+
+vite v7.3.6 building client environment for production...
+transforming...

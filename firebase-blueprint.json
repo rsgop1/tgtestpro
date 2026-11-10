@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "Chat": {
+      "title": "Chat Message",
+      "description": "A single AI chat message",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "maxLength": 10000 },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["text", "role", "createdAt"]
+    },
+    "CustomTest": {
+      "title": "Custom Test",
+      "description": "A generated custom test",
+      "type": "object",
+      "properties": {
+        "topic": { "type": "string", "maxLength": 500 },
+        "testId": { "type": "number" },
+        "shareToken": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["topic", "testId", "shareToken", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/chats/{chatId}": {
+      "schema": { "$ref": "#/entities/Chat" },
+      "description": "AI Space chat history for a user"
+    },
+    "/users/{userId}/customTests/{testId}": {
+      "schema": { "$ref": "#/entities/CustomTest" },
+      "description": "Generated custom tests for a user"
+    }
+  }
+}

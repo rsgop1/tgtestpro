@@ -1,0 +1,24 @@
+- [Grammy sendPoll quiz field](grammy-sendpoll.md) — `correct_option_ids: [number]` (array), NOT `correct_option_id`; TypeScript enforces this
+- [Category callbacks](category-callbacks.md) — keyboard uses `cat_main_SSC`, `cat_sub_SSC_CGL`, `cat_back_main`; handlers use same patterns in start.ts
+- [Ad gateway flow](ad-gateway.md) — free users see 15s ad before test; premium users skip; `ad_noop` callback dismisses early tap; timer expiry shows skip button
+- [Grammy promoteChatMember quirks](grammy-promote-member.md) — `can_be_edited` param does NOT exist in Grammy's type for promoteChatMember; omit it.
+- [Payments table column name](payments-table.md) — payments table uses `submittedAt` not `createdAt`; use submittedAt for ordering/export.
+- [Quiz session shape](quiz-session.md) — QuizSession requires `consecutiveCorrect: number`; always include it when constructing a new quiz session object.
+- [DB lib rebuild requirement](db-lib-rebuild.md) — after adding new columns/tables to lib/db schema, run `pnpm run typecheck:libs` before leaf typecheck; otherwise TS won't see new exports.
+- [Two admin routers](two-admin-routers.md) — `/admin` = OLD HTML router (admin/router.ts); `/api/admin` = React API router (routes/admin.ts). Always add new API endpoints to routes/admin.ts only.
+- [Live tests participants field](live-tests-schema.md) — liveTestsTable.participants is JSONB number[], no separate participants table exists; use array ops not a join.
+- [FormFields-in-render remount bug](react-formfields-remount.md) — defining a component (FormFields) inside a render function causes it to remount on every keystroke; always use inline JSX function (renderFormFields()) instead.
+- [Custom test MarkdownV2 gotchas](custom-test-markdownv2.md) — `=` inside `_..._` must be `\\=`, silent failures via bot.catch, prefer editMessageText over delete+reply.
+- [PDF-grounded AI and tutor flow](pdf-ai-tutor-flow.md) — binary PDF bytes are not text; use real extraction, publish command menus, and handle tutor follow-up state.
+- [Bot AI, support, and profile flows](bot-ai-and-support.md) — centralize OpenRouter usage and prefer plain text for dynamic Telegram confirmations.
+- [Admin support workspace](admin-support-workspace.md) — `/support` is the real support_tickets inbox; keep it separate from question reports.
+- [Admin preview cookie](admin-preview-cookie.md) — preview auth cookies must be proxy-aware or React admin API calls appear empty with 401s.
+- [VIP access control](vip-access-control.md) — Premium VIP group access uses expiring one-member invite links plus scheduled expiry removal; group ID/config lives in global config.
+- [Bot Study Hub navigation](bot-study-hub.md) — `/menu` and returning `/start` use inline navigation; commands remain as backward-compatible fallbacks.
+- [Agentic admin-only mode](agentic-admin-only.md) — Agentic analysis is admin-panel-only; bot AI entry points are hidden/disabled while the background worker remains active.
+- [AI Space session behavior](ai-space-session.md) — Premium AI Space uses HTML formatting, question-level mistake context, title-only analytics, and expires after five idle minutes.
+- [PDF custom-set OCR pipeline](pdf-custom-set-ocr.md) — selectable PDFs use text extraction; image PDFs render pages and use vision OCR before grounded quiz generation.
+- [AI provider secrets](ai-provider-secrets.md) — provider selection is DB config, but API keys stay in Replit Secrets and are never stored through the admin app.
+- [Premium activation and coupons](premium-activation-coupons.md) — all Premium grants share one activation path; 100% coupons grant Premium and VIP instantly with redemption audit.
+- [Admin user 360 and alerts](admin-user-360-alerts.md) — consolidated user profile endpoint powers profile, commerce, activity, support, and actionable dashboard alerts.
+- [Premium web mock tests](premium-web-mock-tests.md) — Telegram issues short-lived signed learner links; web runner and Telegram attempts share user history.

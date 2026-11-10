@@ -1,0 +1,27 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run build --workspace=artifacts/admin-panel && npm run build --workspace=artifacts/testbook-web && npm run dev --workspace=artifacts/api-server",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
+  },
+  "workspaces": [
+    "artifacts/*",
+    "lib/*",
+    "scripts"
+  ],
+  "overrides": {
+    "esbuild": "0.27.3"
+  },
+  "dependencies": {
+    "@google/genai": "^2.21.0",
+    "firebase": "^12.18.0",
+    "react-firebase-hooks": "^5.1.1"
+  }
+}
